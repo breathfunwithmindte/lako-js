@@ -1,0 +1,164 @@
+{
+  "required_application_properties": [
+    {
+      "name": "appname",
+      "required": true,
+      "type": "string",
+      "default": "none",
+      "initial": ""
+    },
+    {
+      "name": "clusters",
+      "required": true,
+      "type": "number",
+      "default": 1
+    },
+    {
+      "name": "controller_path",
+      "required": true,
+      "type": "string",
+      "default": "/controllers",
+      "initial": "/application"
+    },
+    {
+      "name": "schema_path",
+      "required": true,
+      "type": "string",
+      "default": "/schema",
+      "initial": "/application"
+    },
+    {
+      "name": "middleware_path",
+      "required": true,
+      "type": "string",
+      "default": "/middlewares",
+      "initial": "/application"
+    },
+    {
+      "name": "view_path",
+      "required": true,
+      "type": "string",
+      "default": "/views",
+      "initial": "/application"
+    },
+    {
+      "name": "doc_path",
+      "required": true,
+      "type": "string",
+      "default": "none",
+      "initial": ""
+    },
+    {
+      "name": "authentication_middleware",
+      "required": true,
+      "type": "string",
+      "default": "none",
+      "initial": ""
+    },
+    {
+      "name": "authentication_middleware_isadmin",
+      "required": true,
+      "type": "string",
+      "default": "none",
+      "initial": ""
+    },
+    {
+      "name": "doc_middleware",
+      "required": true,
+      "type": "string",
+      "default": "none",
+      "initial": ""
+    },
+    {
+      "name": "view_engine",
+      "required": true,
+      "type": "string",
+      "default": "none",
+      "initial": ""
+    },
+    {
+      "name": "mode",
+      "required": true,
+      "type": "string",
+      "default": "none",
+      "initial": ""
+    },
+    {
+      "name": "test_controller_path",
+      "type": "string",
+      "required": true,
+      "default": "/test_server",
+      "initial": "/application"
+    },
+    {
+      "name": "logs",
+      "required": true,
+      "type": "boolean",
+      "default": true,
+      "initial": null
+    },
+    {
+      "name": "enable_database",
+      "required": true,
+      "type": "boolean",
+      "default": true,
+      "initial": null
+    },
+    {
+      "name": "enable_docs",
+      "required": true,
+      "type": "boolean",
+      "default": true,
+      "initial": null
+    },
+    {
+      "name": "log_table_primary_routes",
+      "required": true,
+      "type": "boolean",
+      "default": true,
+      "initial": null
+    },
+    {
+      "name": "enable_cors",
+      "required": true,
+      "type": "boolean",
+      "default": true,
+      "initial": null
+    },
+    {
+      "name": "rewrite_doc",
+      "required": true,
+      "type": "boolean",
+      "default": true,
+      "initial": null
+    },
+    {
+      "name": "use_views",
+      "required": true,
+      "type": "boolean",
+      "default": true,
+      "initial": null
+    },
+    {
+      "name": "routers",
+      "required": true,
+      "type": "object",
+      "default": [],
+      "initial": null
+    },
+    {
+      "name": "know_errors",
+      "required": true,
+      "type": "object",
+      "default": [],
+      "initial": null
+    },
+    {
+      "name": "non_error_statuses",
+      "required": true,
+      "type": "object",
+      "default": [],
+      "initial": null
+    }
+  ]
+}

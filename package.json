@@ -1,0 +1,44 @@
+{
+  "name": "lako-js",
+  "version": "1.0.0",
+  "description": "web server framework inspired by ruby on rails and fastapi",
+  "main": "index.js",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "ejs": "^3.1.8",
+    "express": "^4.18.1",
+    "express-fileupload": "^1.4.0",
+    "mongoose": "^6.4.7",
+    "swagger-ui-express": "^4.5.0",
+    "yaml": "^2.1.1"
+  },
+  "peerDependencies": {
+    "ejs": "^3.1.8",
+    "express": "^4.18.1",
+    "mongoose": "^6.4.7",
+    "swagger-ui-express": "^4.5.0",
+    "yaml": "^2.1.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/breathfunwithmindte/lako-js.git"
+  },
+  "keywords": [
+    "web",
+    "server",
+    "framework",
+    "ruby",
+    "on",
+    "rails"
+  ],
+  "author": "Mike Karypidis",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/breathfunwithmindte/lako-js/issues"
+  },
+  "homepage": "https://github.com/breathfunwithmindte/lako-js#readme"
+}

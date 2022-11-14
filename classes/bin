@@ -1,0 +1,337 @@
+const Controller = require("./Controller");
+const Validator = require("../utils/validator");
+const { service_runner } = require("../services/ServiceRunner");
+const fs = require("fs");
+
+
+module.exports = class ViewController extends Controller {
+
+  static restapi = false;
+  static response_type = "text/html";
+
+  async run(express, turbo_route) {
+    const { req, res } = express;
+    try {
+      if (req.$validator_error) {
+        WriteInfo(req, res, turbo_route);
+        req.$status = 400;
+        res.$response = {...res.$response, ...{
+            total_errors: req.$validator_errors.length,
+            errors: req.$validator_errors,
+            path: req.route.path,
+            method: req.method,
+            queries: req.$queries,
+            body: req.$body,
+        }}
+        if (req.$error) return req.$mprender(req, res, turbo_route, null);
+      }
+
+
+
+      const current_method = this[turbo_route.classmethod];
+
+      // todo improve error when class method is not a function //
+      if (typeof current_method !== "function")
+        throw new Error("Type of method is not function ");
+
+      const user = req.user ? req.user : null;
+
+      if (turbo_route.authenticated && !user) return req.$mprender(req, res, turbo_route, null);
+      if (req.$error) return req.$mprender(req, res, turbo_route, null);
+
+      const props_controller = {
+        queries: req.$queries,
+        body: req.$body,
+        params: req.$params,
+        cookies: req.$cookies,
+        user: user,
+      };
+
+      const result = await current_method(
+        express, // has req and res
+        props_controller,
+        turbo_route // turbo route
+      );
+
+      if (typeof result === "string") {
+
+        const current_service = pro.Services[turbo_route.service_classname];
+        if (current_service) {
+          const service_result = await service_runner(current_service, turbo_route.service_methodname, req);
+          if (service_result.status === -1) {
+            req.$status === 500;
+            req.$message = service_result.message || "Something went wrong - ERROR not catched in service.";
+          } else {
+            if (!service_result.result) {
+              console.log(service_result.message);
+            }
+            if (service_result.result && service_result.result.error)
+              req.$status = 500;
+              res.$response = {...res.$response, ...service_result.result}
+          }
+        } else if (!current_service && turbo_route.service_methodname) {
+          res.$status = 500;
+          res.$message = "Service not found";
+        }
+        WriteInfo(req, res, turbo_route);
+
+        req.$mprender(req, res, turbo_route, result);
+
+        return;
+      }
+    } catch (error) {
+      WriteInfo(req, res, turbo_route);
+      console.log(error);
+      require("fs").appendFileSync(
+        pro.root + "/tmp/logs/RestController.error",
+        `
+~~~~~ ${new Date()} ~~~~~
+      name: Rest Controller Error
+      severity: Critical
+      error: ${error.toString()}
+~~~~~ message end ~~~~~
+      `
+      );
+      res
+        .status(500)
+        .json({
+          message:
+            "Something went wrong. Fatar error for the server. Try again later.",
+        });
+    }
+  }
+};
+
+function WriteInfo(req, res, turbo_route) {
+  if (pro.mode === "development") {
+    try {
+      const writable_obj = {
+        name: "Rest Controller Info",
+        $status: req.$status,
+        $response: res.$response,
+        $message: req.$message,
+        $validator_error: req.$validator_error,
+        $validator_errors: req.$validator_errors,
+        $cookies: req.$cookies,
+        $queries: req.$queries,
+        $params: req.$params,
+        $body: req.$body,
+        $turbo_route: turbo_route,
+        $service_props: req.$service_props,
+        $error: req.$error,
+        $view: req.$view,
+        $error_log_id: req.$error_log_id,
+        createdAt: new Date(),
+      };
+      fs.writeFileSync(
+        pro.root + "/tmp/logs/RestController.info.json",
+        `${JSON.stringify(writable_obj, null, 2)}`
+      );
+      const currdata = new Date().toLocaleDateString();
+      const currdatetime = new Date().toLocaleTimeString();
+      const filename =
+        currdata.replaceAll("/", "_") +
+        " " +
+        currdatetime.replaceAll(":", "_").replaceAll(".", "");
+      if (fs.existsSync(pro.root + "/tmp/logs/DELETEME_restinfo")) {
+        fs.writeFileSync(
+          pro.root + `/tmp/logs/DELETEME_restinfo/${filename}.info.json`,
+          `${JSON.stringify(writable_obj, null, 2)}`
+        );
+      } else {
+        fs.mkdirSync(pro.root + "/tmp/logs/DELETEME_restinfo");
+        fs.writeFileSync(
+          pro.root + `/tmp/logs/DELETEME_restinfo/${filename}.info.json`,
+          `${JSON.stringify(writable_obj, null, 2)}`
+        );
+      }
+    } catch (e) {
+      console.log(e);
+      console.log(e.toString());
+    }
+  }
+}
+
+
+
+service old
+  // if(result["service_error"]) {
+    //   pro.logs.logerr("Service error " + result.description)
+    //   res.$gresponse.setResponse(400, "Oups !! Something went wrong.")
+    //   res.$gresponse.setErrors([new ValidationError("service", result["field"] || "unknow", result.description)])
+    // }
+    // if(result) {
+
+    // }
+
+
+
+
+    const Controller = require("./Controller");
+const Validator = require("../utils/validator");
+const { service_runner } = require("../services/ServiceRunner");
+const GeneralResponse = require("../types/GeneralResponse");
+const MyError = require("../types/MyError");
+const TurboRoute = require("../types/TurboRoute");
+const { logwarn } = require("../utils/logs");
+
+module.exports = class RestController extends Controller {
+  static restapi = true;
+  static response_type = "application/json";
+  controller_type = "rest"
+
+  /**
+   * @interface - you can override this default behaviour of a rest controller;
+   * @doc - controller error handler
+   * @param {*} error - Enum(GeneralResponse | MyError | Any)
+   * @param {Object} req - http request instance
+   * @param {Object} res - http response instance 
+   * @param {TurboRoute} turbo_route 
+   * @returns 
+   */
+  error_handler_rest (error, req, res, turbo_route)
+  {
+    if(error instanceof GeneralResponse) {
+      error.validate();
+      if(pro.mode === "development") { logwarn("[ERR] 'GeneralResponse' - status=" + error.status) }
+      res.status(error.status).json(error);
+      this.log_dev(req, res, turbo_route, null)
+      return;
+    }
+
+    if(error instanceof MyError) {
+      if(pro.mode === "development") { logwarn("[ERR] 'MyError' - status=" + error.status) }
+      // ! here on production if severirty is -1 or -2 error will be recorded;
+      this.log_dev(req, res, turbo_route, error);
+      res.status(error.status).json(error.response());
+      return;
+    }
+
+    // ? try to avoid this kind of errors;
+    if(pro.mode === "development") { logwarn("[ERR] 'unknown' - msg=" + error?.toString()) }
+    const myerror = new MyError(-1, error?.toString(), turbo_route, 500);
+    res.status(500).json(myerror.response());
+  
+  }
+
+  error_handler_view ()
+  {
+
+  }
+
+  /**
+   *
+   * @param {*} express
+   * @param {TurboRoute} turbo_route
+   * @returns
+   */
+  async run(express, turbo_route) {
+    const { req, res } = express;
+
+    /**
+     * @type {GeneralResponse}
+     */
+    const gresponse = res.$gresponse;
+    
+    try {
+
+      // ? unsure why this exist ... will implement something later;
+      if (res.$error) {
+        throw gresponse;
+        return;
+      }
+
+      // primary validation stuff of a controller;
+      if (req.$validator_error && req.$validator_errors instanceof Array === true) {
+        gresponse.setErrors(req.$validator_errors);
+        gresponse.setInfo({
+          path: req.route.path,
+          method: req.method,
+          queries: req.query,
+          body: req.body,
+        });
+        throw gresponse;
+      }
+
+      if (typeof this[turbo_route.classmethod] !== "function") {
+        throw new MyError(
+          -1,
+          "Type of Controller method is not a function.",
+          turbo_route
+        );
+      }
+
+      if (pro.Services[turbo_route.pre_service_classname]) {
+        
+      } else if (!pro.Services[turbo_route.pre_service_classname] && turbo_route.pre_service_methodname) {
+        gresponse.setResponse(
+          500,
+          "Pre Service not found with name = " + turbo_route.pre_service_classname
+        );
+      }
+      
+
+      if (turbo_route.authenticated && !req.user) throw new MyError(
+        -1, null, turbo_route, 401, "Not Authenticated"
+      )
+
+      const props_controller = {
+        files: req.files,
+        queries: req.query,
+        body: req.body,
+        params: req.params,
+        cookies: req.$cookies,
+        user: req.user,
+      };
+
+      const result = await this[turbo_route.classmethod](
+        express, // has req and res
+        props_controller,
+        gresponse,
+        turbo_route // turbo route,
+      );
+      if (result === null || result === false) return;
+
+      
+      if (typeof result === "string") {
+        res.send(result);
+        return;
+      }
+
+      if (res.$error) {
+        throw gresponse;
+        return;
+      }
+
+      // ? ~~~~~ if result from controller is object 
+      if (typeof result === "object") {
+        gresponse.setData(result);
+      }
+
+      // ? ~~~~~ if result from controller is undefined
+      if (result === undefined) {
+        const current_service = pro.Services[turbo_route.service_classname];
+
+        if (current_service) {
+          await service_runner(
+            current_service,
+            turbo_route.service_methodname,
+            req,
+            res
+          );
+        } else if (!current_service && turbo_route.service_methodname) {
+          gresponse.setResponse(
+            500,
+            "Service not found with name = " + turbo_route.service_methodname
+          );
+        }
+      }
+
+      this.log_dev(req, res, turbo_route, null);
+      gresponse.validate();
+      res.status(gresponse.status || 500).json(gresponse);
+    } catch (error) {
+      this.error_handler_rest(error, req, res, turbo_route);
+    }
+  }
+};

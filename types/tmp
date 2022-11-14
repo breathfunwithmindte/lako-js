@@ -1,0 +1,26 @@
+// ! @if env is test will send different responses;
+
+test("post", (client) => {
+
+  client.describe("should send list of articles", (res) => {
+    res.status.equal(200);
+    res.body.should_have_properties([
+      { name: "articles", type: "list" }
+    ]);
+    res.body.should_not_have_properties([])
+    res.body.something.notEqual()
+    res.type_should_be("html");
+    res.isMpError();
+    res.isGResponseError();
+    res.isNotGResponseError();
+    res.isKnowError();
+    res.isUnknowError();
+    res.logSaved();
+
+    expect(res.status).toBe(200);
+
+
+
+  })
+
+})  
